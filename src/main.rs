@@ -3,10 +3,7 @@ use petgraph::algo::{astar};
 use petgraph::prelude::*;
 use std::collections::{BTreeMap};
 use std::time::SystemTime;
-use std::process;
 use osm4routing::models::{Node, Edge};
-use std::fs::OpenOptions;
-use std::cmp::min;
 
 fn main() {
     let now = SystemTime::now();
@@ -17,7 +14,7 @@ fn main() {
     let mut nodes_on_graph = BTreeMap::new();
     let mut index_on_graph = BTreeMap::new();
 
-    let mut coordinate_input: Vec<(f64, f64)> = vec![
+    let coordinate_input: Vec<(f64, f64)> = vec![
         (40.424725, -3.690438),
         (40.421096, -3.688578),
         (40.421834, -3.693954)
@@ -25,7 +22,7 @@ fn main() {
     let mut coordinates: Vec<Coordinate> = Vec::new();
     for coordinate in coordinate_input {
         let mut coord = Coordinate::from(coordinate);
-        let node = map.reverse_geocode_node(coordinate);
+        let node = map.reverse_geocode_node(coord);
         coord.node = Some(node);
         coordinates.push(coord);
     }
@@ -46,6 +43,7 @@ fn main() {
     }
     println!("Nodes on graph, {}", graph.node_count());
     println!("Edges on graph, {}", graph.edge_count());
+
     let mut result: Vec<Vec<f64>> = Vec::new();
 
     for origin_coordinate in &coordinates {
@@ -55,7 +53,7 @@ fn main() {
         for destination_coordinate in &coordinates {
             let end_node = nodes_on_graph.get(&destination_coordinate.node.unwrap().id).unwrap().clone();
             let res = astar(&graph, start_node, |finish| finish == end_node, |e| *e.weight(), |_| 0.);
-            let (cost, path) = res.unwrap();
+            let (cost, _path) = res.unwrap();
             distances.push(cost);
         }
 
@@ -80,14 +78,17 @@ impl From<&String> for Map {
 }
 
 impl Map {
-    fn reverse_geocode_node(&self, coordinate: (f64, f64)) -> Node {
-        let lat: f64 = coordinate.0;
-        let lon: f64 = coordinate.1;
+    fn reverse_geocode_node(&self, coordinate: Coordinate) -> Node {
         let mut min_distance: Option<f64> = None;
         let mut node: Option<Node> = None;
         for current_node in self.nodes.clone() {
             let calc_distance: Option<f64> = Some(
-                self.haversine_distance(lat, lon, current_node.coord.lat, current_node.coord.lon)
+                self.haversine_distance(
+                    coordinate.lat,
+                    coordinate.lon,
+                    current_node.coord.lat,
+                    current_node.coord.lon
+                )
             );
             if min_distance.is_none() {
                 min_distance = calc_distance;
@@ -114,6 +115,7 @@ impl Map {
     }
 }
 
+#[derive(Clone, Copy)]
 struct Coordinate {
     lat: f64,
     lon: f64,
