@@ -6,6 +6,7 @@ use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::cmp::Ordering;
 use petgraph::visit::VisitMap;
 use petgraph::visit::EdgeRef;
+use petgraph::graph::NodeIndex;
 
 #[derive(Copy, Clone, Debug)]
 pub struct MinScored<K, T>(pub K, pub T);
@@ -91,8 +92,8 @@ pub fn astar_multiple_goals<G, F, H, K, IsGoal>(
     start: G::NodeId,
     mut is_goal: IsGoal,
     mut edge_cost: F,
-    mut estimate_cost: H,
-) -> Option<(K, Vec<G::NodeId>)>
+    mut estimate_cost: H
+) -> HashMap<<G as GraphBase>::NodeId, Option<(K)>>
     where
         G: IntoEdges + Visitable,
         IsGoal: FnMut(G::NodeId) -> bool,
@@ -104,7 +105,7 @@ pub fn astar_multiple_goals<G, F, H, K, IsGoal>(
     let mut visited = graph.visit_map();
     let mut visit_next = BinaryHeap::new();
     let mut scores = HashMap::new();
-    let mut path_tracker = PathTracker::<G>::new();
+    let mut results = HashMap::new();
 
     let zero_score = K::default();
     scores.insert(start, zero_score);
@@ -112,9 +113,9 @@ pub fn astar_multiple_goals<G, F, H, K, IsGoal>(
 
     while let Some(MinScored(_, node)) = visit_next.pop() {
         if is_goal(node) {
-            let path = path_tracker.reconstruct_path_to(node);
             let cost = scores[&node];
-            return Some((cost, path));
+            results.insert(node, Some((cost)));
+            // println!("Found result. Now we have {:?}", results.len());
         }
 
         // Don't visit the same node several times, as the first time it was visited it was using
@@ -140,14 +141,12 @@ pub fn astar_multiple_goals<G, F, H, K, IsGoal>(
                     let old_score = *ent.get();
                     if next_score < old_score {
                         *ent.into_mut() = next_score;
-                        path_tracker.set_predecessor(next, node);
                     } else {
                         next_score = old_score;
                     }
                 }
                 Vacant(ent) => {
                     ent.insert(next_score);
-                    path_tracker.set_predecessor(next, node);
                 }
             }
 
@@ -156,5 +155,5 @@ pub fn astar_multiple_goals<G, F, H, K, IsGoal>(
         }
     }
 
-    None
+    results
 }
