@@ -50,43 +50,6 @@ impl<K: PartialOrd, T> Ord for MinScored<K, T> {
     }
 }
 
-struct PathTracker<G>
-    where
-        G: GraphBase,
-        G::NodeId: Eq + Hash,
-{
-    came_from: HashMap<G::NodeId, G::NodeId>,
-}
-
-impl<G> PathTracker<G>
-    where
-        G: GraphBase,
-        G::NodeId: Eq + Hash,
-{
-    fn new() -> PathTracker<G> {
-        PathTracker {
-            came_from: HashMap::new(),
-        }
-    }
-
-    fn set_predecessor(&mut self, node: G::NodeId, previous: G::NodeId) {
-        self.came_from.insert(node, previous);
-    }
-
-    fn reconstruct_path_to(&self, last: G::NodeId) -> Vec<G::NodeId> {
-        let mut path = vec![last];
-
-        let mut current = last;
-        while let Some(&previous) = self.came_from.get(&current) {
-            path.push(previous);
-            current = previous;
-        }
-
-        path.reverse();
-
-        path
-    }
-}
 pub fn astar_multiple_goals<G, F, H, K, IsGoal>(
     graph: G,
     start: G::NodeId,
@@ -115,7 +78,6 @@ pub fn astar_multiple_goals<G, F, H, K, IsGoal>(
         if is_goal(node) {
             let cost = scores[&node];
             results.insert(node, Some((cost)));
-            // println!("Found result. Now we have {:?}", results.len());
         }
 
         // Don't visit the same node several times, as the first time it was visited it was using
@@ -181,14 +143,16 @@ pub fn dijkstra<G, F, K, IsGoal>(
     scores.insert(start, zero_score);
     visit_next.push(MinScored(zero_score, start));
     while let Some(MinScored(node_score, node)) = visit_next.pop() {
-        if visited.is_visited(&node) {
-            continue;
-        }
         if is_goal(node) {
             let cost = scores[&node];
             results.insert(node, Some((cost)));
             // println!("Found result. Now we have {:?}", results.len());
         }
+        if visited.is_visited(&node) {
+            continue;
+        }
+        // TODO: If all target nodes have been found, break
+
         for edge in graph.edges(node) {
             let next = edge.target();
             if visited.is_visited(&next) {
