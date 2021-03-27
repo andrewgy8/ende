@@ -56,7 +56,7 @@ pub fn astar_multiple_goals<G, F, H, K, IsGoal>(
     mut is_goal: IsGoal,
     mut edge_cost: F,
     mut estimate_cost: H
-) -> HashMap<<G as GraphBase>::NodeId, Option<(K)>>
+) -> HashMap<<G as GraphBase>::NodeId, K>
     where
         G: IntoEdges + Visitable,
         IsGoal: FnMut(G::NodeId) -> bool,
@@ -68,7 +68,7 @@ pub fn astar_multiple_goals<G, F, H, K, IsGoal>(
     let mut visited = graph.visit_map();
     let mut visit_next = BinaryHeap::new();
     let mut scores = HashMap::new();
-    let mut results = HashMap::new();
+    let mut node_costs: HashMap<G::NodeId, K> = HashMap::new();
 
     let zero_score = K::default();
     scores.insert(start, zero_score);
@@ -77,7 +77,7 @@ pub fn astar_multiple_goals<G, F, H, K, IsGoal>(
     while let Some(MinScored(_, node)) = visit_next.pop() {
         if is_goal(node) {
             let cost = scores[&node];
-            results.insert(node, Some((cost)));
+            node_costs.insert(node, cost);
         }
 
         // Don't visit the same node several times, as the first time it was visited it was using
@@ -117,7 +117,7 @@ pub fn astar_multiple_goals<G, F, H, K, IsGoal>(
         }
     }
 
-    results
+    node_costs
 }
 
 

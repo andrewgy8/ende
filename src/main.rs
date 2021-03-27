@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{HashMap};
 use std::time::SystemTime;
 
 use petgraph::Graph;
@@ -29,25 +29,31 @@ fn main() {
     println!(" ✓ duration: {}s\n", now.elapsed().unwrap().as_secs());
 
     let mut graph: Graph<(), f64, Directed> = Graph::new();
-    let mut nodes_on_graph = BTreeMap::new();
-    let mut index_on_graph = BTreeMap::new();
+    let mut nodes_on_graph = HashMap::new();
+    let mut index_on_graph = HashMap::new();
     let mut coordinates: Vec<Coordinate> = Vec::new();
 
     println!("Reverse geocoding coordinates...");
     for coordinate in coordinate_input {
-        let mut coord = Coordinate::from(coordinate);
         let node = map.reverse_geocode_node(coord);
-        coord.node = Some(node);
+        let mut coord = Coordinate::from(coordinate);
+        coord.map_node = Some(node);
         coordinates.push(coord);
     }
     println!("Reverse geocoding complete.");
     println!(" ✓ duration: {}s\n", now.elapsed().unwrap().as_secs());
 
+    let mut map_index_on_coordinate = HashMap::new();
+    coordinates.iter().for_each(|mut coordinate| {
+        map_index_on_coordinate.insert(coordinate.map_node, coordinate);
+    });
     for node in map.nodes {
         let graph_node = graph.add_node(());
         nodes_on_graph.insert(node.id, graph_node);
         index_on_graph.insert(graph_node, node);
+        map_index_on_coordinate.get(node)
     }
+
 
     for edge in map.edges.iter().filter(|&e| {
         e.properties.car_forward >= 1
@@ -64,33 +70,33 @@ fn main() {
     let mut distances: Vec<Vec<f64>> = Vec::new();
     let mut durations: Vec<Vec<f64>> = Vec::new();
 
-    println!("Generating matrix");
+    println!("Generating matrix...");
     &coordinates.iter().for_each(|origin_coordinate| {
-        let start_node = nodes_on_graph.get(&origin_coordinate.node.unwrap().id).unwrap().clone();
+        let start_node = nodes_on_graph.get(&origin_coordinate.map_node.unwrap().id).unwrap().clone();
         let (distance, duration) = find_distances(start_node, (*coordinates).to_owned(), nodes_on_graph.clone(), graph.clone());
 
         distances.push(distance);
         durations.push(duration);
     });
 
-    println!("Distances: {:?}\n", distances);
+    println!("Distances: {:?}", distances);
     println!("Durations: {:?}\n", durations);
-    println!(" ✓ Total duration: {}s\n", now.elapsed().unwrap().as_secs());
+    println!(" ✓ Total duration: {}s", now.elapsed().unwrap().as_secs());
 }
 
 fn find_distances(
     origin_node: NodeIndex,
     coordinates: Vec<Coordinate>,
-    nodes_on_graph: BTreeMap<i64, NodeIndex>,
+    nodes_on_graph: HashMap<i64, NodeIndex>,
     graph: Graph<(), f64, Directed>,
 ) -> (Vec<f64>, Vec<f64>) {
     let mut distance: Vec<f64> = Vec::new();
     let mut duration: Vec<f64> = Vec::new();
 
-    let res = algorithms::astar_multiple_goals(
+    let res: HashMap<NodeIndex, f64> = algorithms::astar_multiple_goals(
         &graph,
         origin_node,
-        |finish| coordinates.iter().map(|coordinate| nodes_on_graph.get(&coordinate.node.unwrap().id)).any(|node_index| node_index == Some(&finish)),
+        |finish| coordinates.iter().map(|coordinate| nodes_on_graph.get(&coordinate.map_node.unwrap().id)).any(|node_index| node_index == Some(&finish)),
         |e| *e.weight(),
         |_| 0.
     );
@@ -107,8 +113,9 @@ fn find_distances(
     // }
     // println!("Found costs: {:?}", res.len());
     const AVG_VEHICLE_SPEED: f64 = 25.00;
-    for (_node_id, cost) in &res {
-        match cost {
+
+    for coordinate in &coordinates {
+        match res.get(&coordinate.graph_node.unwrap()) {
             Some(cost) => {
                 distance.push(*cost);
                 duration.push(f64::trunc(cost / AVG_VEHICLE_SPEED));

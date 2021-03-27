@@ -2,6 +2,7 @@ use core::convert::From;
 use core::option::Option;
 use core::option::Option::{None, Some};
 use osm4routing::models::{Edge, Node};
+use petgraph::graph::NodeIndex;
 
 pub struct Map {
     pub nodes: Vec<Node>,
@@ -57,11 +58,12 @@ impl Map {
 pub struct Coordinate {
     lat: f64,
     lon: f64,
-    pub node: Option<Node>,
+    pub map_node: Option<Node>,
+    pub graph_node: Option<NodeIndex>
 }
 
 impl From<(f64, f64)> for Coordinate {
     fn from(coordinate: (f64, f64)) -> Coordinate {
-        Self { lat: coordinate.0, lon: coordinate.1, node: None }
+        Self { lat: coordinate.0, lon: coordinate.1, map_node: None, graph_node: None }
     }
 }
