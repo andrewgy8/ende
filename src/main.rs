@@ -9,6 +9,8 @@ use docopt::Docopt;
 mod algorithms;
 mod types;
 
+const AVG_VEHICLE_SPEED: f64 = 25.00;
+
 fn main() {
     const USAGE: &'static str = "Ende Matrix Generator
 
@@ -26,9 +28,9 @@ fn main() {
     let coordinate_input: Vec<(f64, f64)> = vec![(40.424725, -3.690438), (40.421096, -3.688578)];
     println!("Generating a matrix for {} locations", coordinate_input.len());
 
-    println!("Parse map file started.");
 
     let file_name: String = String::from(args.get_str("<source.osm.pbf>"));
+    println!("Reading  {}", file_name);
     let map = Map::from(&file_name);
     println!(" ✓ duration: {}s\n", now.elapsed().unwrap().as_secs());
 
@@ -90,11 +92,13 @@ fn find_distances(
 ) -> (Vec<f64>, Vec<f64>) {
     let mut distance: Vec<f64> = Vec::new();
     let mut duration: Vec<f64> = Vec::new();
-
+    let is_goal = |finish| {
+        coordinates.iter().map(|coordinate| nodes_on_graph.get(&coordinate.map_node.unwrap().id)).any(|node_index| node_index == Some(&finish))
+    };
     let res: HashMap<NodeIndex, f64> = algorithms::astar_multiple_goals(
         &graph,
         origin_node,
-        |finish| coordinates.iter().map(|coordinate| nodes_on_graph.get(&coordinate.map_node.unwrap().id)).any(|node_index| node_index == Some(&finish)),
+        is_goal,
         |e| *e.weight(),
         |_| 0.
     );
@@ -102,15 +106,9 @@ fn find_distances(
     // let res = algorithms::dijkstra(
     //     &graph,
     //     origin_node,
-    //     |finish| coordinates.iter().map(|coordinate| nodes_on_graph.get(&coordinate.node.unwrap().id)).any(|node_index| node_index == Some(&finish)),
+    //     is_goal,
     //     |e| *e.weight()
     // );
-    // for (node_id, result) in &res {
-    //     let cost = result.unwrap();
-    //     println!("Found cost: {:?}", cost);
-    // }
-    // println!("Found costs: {:?}", res.len());
-    const AVG_VEHICLE_SPEED: f64 = 25.00;
 
     for coordinate in &coordinates {
         match res.get(&coordinate.graph_node.unwrap()) {

@@ -125,7 +125,7 @@ pub fn dijkstra<G, F, K, IsGoal>(
     start: G::NodeId,
     mut is_goal: IsGoal,
     mut edge_cost: F,
-) -> HashMap<<G as GraphBase>::NodeId, Option<K>>
+) -> HashMap<<G as GraphBase>::NodeId, K>
     where
         G: IntoEdges + Visitable,
         G::NodeId: Eq + Hash,
@@ -144,7 +144,7 @@ pub fn dijkstra<G, F, K, IsGoal>(
     while let Some(MinScored(node_score, node)) = visit_next.pop() {
         if is_goal(node) {
             let cost = scores[&node];
-            results.insert(node, Some(cost));
+            results.insert(node, cost);
             // println!("Found result. Now we have {:?}", results.len());
         }
         if visited.is_visited(&node) {
