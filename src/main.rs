@@ -2,7 +2,7 @@ use docopt::Docopt;
 use crate::matrix::Matrix;
 
 mod algorithms;
-mod types;
+mod maps;
 mod matrix;
 
 const AVG_VEHICLE_SPEED: f64 = 25.00;

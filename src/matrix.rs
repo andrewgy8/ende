@@ -1,4 +1,4 @@
-use crate::types::{Coordinate, Map};
+use crate::maps::{Coordinate, Map};
 use petgraph::{Graph, Directed};
 use petgraph::prelude::*;
 use std::collections::HashMap;
