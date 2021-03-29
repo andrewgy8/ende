@@ -107,6 +107,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e78d4f1cc4ae33bbfc157ed5d5a5ef3bc29227303d595861deb238fcec4e9457"
 
 [[package]]
+name = "ende"
+version = "0.1.0"
+dependencies = [
+ "docopt",
+ "haversiner",
+ "osm4routing",
+ "pdf",
+ "petgraph",
+ "rayon",
+]
+
+[[package]]
 name = "fixedbitset"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -120,18 +132,6 @@ checksum = "e6234dd4468ae5d1e2dbb06fe2b058696fdc50a339c68a393aefbf00bc81e423"
 dependencies = [
  "libc",
  "miniz-sys",
-]
-
-[[package]]
-name = "graph-example"
-version = "0.1.0"
-dependencies = [
- "docopt",
- "haversiner",
- "osm4routing",
- "pdf",
- "petgraph",
- "rayon",
 ]
 
 [[package]]
