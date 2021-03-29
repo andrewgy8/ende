@@ -3,7 +3,6 @@ use std::time::SystemTime;
 
 use petgraph::Graph;
 use petgraph::prelude::*;
-use rayon::prelude::*;
 use crate::types::{Coordinate, Map};
 
 mod algorithms;
@@ -48,7 +47,6 @@ fn main() {
     println!("Nodes on graph, {}", graph.node_count());
     println!("Edges on graph, {}", graph.edge_count());
     println!(" ✓ duration: {}s\n", now.elapsed().unwrap().as_secs());
-
 
     let mut coordinates: Vec<Coordinate> = Vec::new();
     println!("Reverse geocoding coordinates...");
