@@ -5,10 +5,16 @@ use std::collections::HashMap;
 use crate::{algorithms, AVG_VEHICLE_SPEED};
 use std::time::SystemTime;
 
+pub struct MatrixResult {
+    pub(crate) distances: Vec<Vec<f64>>,
+    pub(crate) durations: Vec<Vec<f64>>
+}
+
 pub struct Matrix;
 
 impl Matrix {
-    pub fn build(file_name: String, locations: Vec<(f64, f64)>){
+
+    pub fn build(file_name: String, locations: Vec<(f64, f64)>) -> MatrixResult {
         let now = SystemTime::now();
         let map = Map::from(&file_name);
         println!(" ✓ duration: {}s\n", now.elapsed().unwrap().as_secs());
@@ -52,20 +58,25 @@ impl Matrix {
         println!("Generating matrix...");
         &coordinates.iter().for_each(|origin_coordinate| {
             let start_node = nodes_on_graph.get(&origin_coordinate.map_node.unwrap().id).unwrap().clone();
-            let (distance, duration) = find_distances(start_node, (*coordinates).to_owned(), nodes_on_graph.clone(), graph.clone());
+            let (distance, duration) = calculate_costs(
+                start_node,
+                (*coordinates).to_owned(),
+                nodes_on_graph.clone(),
+                graph.clone()
+            );
 
             distances.push(distance);
             durations.push(duration);
         });
-
-        println!("Distances: {:?}", distances);
-        println!("Durations: {:?}\n", durations);
+        let result = MatrixResult{distances, durations};
         println!(" ✓ Total duration: {}s", now.elapsed().unwrap().as_secs());
+        return result;
     }
+
 }
 
 
-fn find_distances(
+fn calculate_costs(
     origin_node: NodeIndex,
     coordinates: Vec<Coordinate>,
     nodes_on_graph: HashMap<i64, NodeIndex>,
@@ -74,7 +85,7 @@ fn find_distances(
     let mut distance: Vec<f64> = Vec::new();
     let mut duration: Vec<f64> = Vec::new();
     let is_goal = |finish| {
-        coordinates.iter().map(|coordinate| nodes_on_graph.get(&coordinate.map_node.unwrap().id)).any(|node_index| node_index == Some(&finish))
+        coordinates.iter().map(|coordinate| nodes_on_graph.get(&coordinate.map_node?.id)).any(|node_index| node_index == Some(&finish))
     };
     let res: HashMap<NodeIndex, f64> = algorithms::astar_multiple_goals(
         &graph,
