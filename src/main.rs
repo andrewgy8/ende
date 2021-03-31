@@ -1,5 +1,6 @@
 use docopt::Docopt;
 use crate::matrix::Matrix;
+use crate::maps::Map;
 use std::fs;
 
 mod algorithms;
@@ -9,7 +10,7 @@ mod matrix;
 const AVG_VEHICLE_SPEED: f64 = 25.00;
 
 fn main() {
-    const USAGE: &'static str = "Ende Matrix Generator
+    const USAGE: & str = "Ende Matrix Generator
 
     Usage:
     ende [options] <source.osm.pbf> <locations.json>
@@ -27,7 +28,8 @@ fn main() {
 
     let file_name: String = String::from(args.get_str("<source.osm.pbf>"));
     println!("Reading  {}", file_name);
-    let matrix_result = Matrix::build(file_name, coordinate_input);
+    let map = Map::from(&file_name);
+    let matrix_result = Matrix::build(map, coordinate_input);
     println!("Distances: {:?}", matrix_result.distances);
     println!("Durations: {:?}\n", matrix_result.durations);
 }

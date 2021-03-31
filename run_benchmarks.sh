@@ -1,4 +1,4 @@
-cargo build --
+cargo build
 
 echo "Running small sized benchmark..."
 ./target/release/ende benchmarks/small/mad1.osm.pbf benchmarks/small/locations.json

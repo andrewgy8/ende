@@ -21,23 +21,18 @@ impl Map {
         let mut min_distance: Option<f64> = None;
         let mut node: Option<Node> = None;
         for current_node in self.nodes.clone() {
-            let calc_distance: Option<f64> = Some(
-                self.haversine_distance(
-                    coordinate.lat,
-                    coordinate.lon,
-                    current_node.coord.lat,
-                    current_node.coord.lon,
-                )
+            let calc_distance: f64 = self.haversine_distance(
+                coordinate.lat,
+                coordinate.lon,
+                current_node.coord.lat,
+                current_node.coord.lon,
             );
-            if min_distance.is_none() {
-                min_distance = calc_distance;
-                node = Some(current_node);
-            } else if calc_distance.unwrap() < min_distance.unwrap() {
-                min_distance = calc_distance;
+            if min_distance.is_none() || calc_distance < min_distance.unwrap() {
+                min_distance = Some(calc_distance);
                 node = Some(current_node);
             }
         }
-        return node.unwrap();
+        node.unwrap()
     }
 
     fn haversine_distance(&self, origin_lat: f64, origin_lon: f64, dest_lat: f64, dest_lon: f64) -> f64 {
@@ -50,7 +45,7 @@ impl Map {
         let dx: f64 = ori_lon.cos() * ori_lat.cos() - dest_lat.cos();
         let dy: f64 = ori_lon.sin() * ori_lat.cos();
         let dist: f64 = ((dx * dx + dy * dy + dz * dz).sqrt() / 2.0).asin() * 2.0 * R;
-        return dist;
+        dist
     }
 }
 
@@ -59,7 +54,7 @@ pub struct Coordinate {
     lat: f64,
     lon: f64,
     pub map_node: Option<Node>,
-    pub graph_node: Option<NodeIndex>
+    pub graph_node: Option<NodeIndex>,
 }
 
 impl From<(f64, f64)> for Coordinate {
