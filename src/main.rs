@@ -32,4 +32,5 @@ fn main() {
     let matrix_result = Matrix::build(map, coordinate_input);
     println!("Distances: {:?}", matrix_result.distances);
     println!("Durations: {:?}\n", matrix_result.durations);
+    matrix_result.save();
 }

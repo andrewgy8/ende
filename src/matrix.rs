@@ -1,13 +1,27 @@
+use serde::Serialize;
 use crate::maps::{Coordinate, Map};
 use petgraph::{Graph, Directed};
 use petgraph::prelude::*;
 use std::collections::HashMap;
 use crate::{algorithms, AVG_VEHICLE_SPEED};
 use std::time::SystemTime;
+use std::fs;
 
+#[derive(Serialize)]
 pub struct MatrixResult {
     pub distances: Vec<Vec<f64>>,
     pub durations: Vec<Vec<f64>>
+}
+
+impl MatrixResult {
+    pub fn save(&self) {
+        match serde_json::to_string(&self).map(
+            |json| fs::write("costs.json", &json)
+        ) {
+            Ok(n) => println!("Saved costs.json"),
+            Err(..) => println!("Received an error while saving results.")
+        };
+    }
 }
 
 pub struct OpenRouteGraph {
