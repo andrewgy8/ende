@@ -6,8 +6,8 @@ use crate::{algorithms, AVG_VEHICLE_SPEED};
 use std::time::SystemTime;
 
 pub struct MatrixResult {
-    pub(crate) distances: Vec<Vec<f64>>,
-    pub(crate) durations: Vec<Vec<f64>>
+    pub distances: Vec<Vec<f64>>,
+    pub durations: Vec<Vec<f64>>
 }
 
 pub struct Matrix;
